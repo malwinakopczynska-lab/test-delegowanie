@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jaki typ delegowania reprezentujesz?</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f0e17; --surface: #1a1929; --card: #22213a;
+  --a1: #e8c547; --a2: #7c6af7; --a3: #f76c6c; --a4: #4ecdc4;
+  --text: #fffffe; --muted: #a7a9be; --r: 16px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+.orbs { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+.orb { position: absolute; border-radius: 50%; filter: blur(80px); opacity: .13; }
+.o1 { width: 600px; height: 600px; background: var(--a2); top: -200px; left: -200px; }
+.o2 { width: 400px; height: 400px; background: var(--a1); bottom: -100px; right: -100px; }
+.o3 { width: 300px; height: 300px; background: var(--a3); top: 50%; left: 60%; }
+.wrap { max-width: 760px; margin: 0 auto; padding: 40px 24px 80px; position: relative; z-index: 1; }
+.header { text-align: center; margin-bottom: 44px; }
+.badge { display: inline-block; background: rgba(124,106,247,.18); border: 1px solid rgba(124,106,247,.4); color: var(--a2); font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; padding: 6px 18px; border-radius: 100px; margin-bottom: 18px; }
+h1 { font-family: 'Playfair Display', serif; font-size: clamp(30px,6vw,50px); line-height: 1.1; margin-bottom: 14px; }
+h1 span { color: var(--a1); }
+.sub { color: var(--muted); font-size: 16px; font-weight: 300; line-height: 1.6; max-width: 500px; margin: 0 auto; }
+.prog-wrap { margin-bottom: 28px; }
+.prog-meta { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+.prog-bg { height: 4px; background: rgba(255,255,255,.08); border-radius: 100px; overflow: hidden; }
+.prog-fill { height: 100%; background: linear-gradient(90deg, var(--a2), var(--a1)); border-radius: 100px; transition: width .5s ease; }
+.qcard { background: var(--card); border: 1px solid rgba(255,255,255,.07); border-radius: var(--r); padding: 32px 28px; margin-bottom: 16px; }
+.qnum { font-size: 11px; color: var(--a1); font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px; }
+.qtext { font-family: 'Playfair Display', serif; font-size: clamp(17px,3vw,22px); line-height: 1.4; font-weight: 700; }
+.opts { display: flex; flex-direction: column; gap: 10px; }
+.opt { background: var(--surface); border: 1.5px solid rgba(255,255,255,.08); border-radius: var(--r); padding: 16px 20px; cursor: pointer; display: flex; align-items: flex-start; gap: 14px; transition: all .2s; }
+.opt:hover { border-color: rgba(124,106,247,.5); transform: translateY(-2px); }
+.opt.sel { border-color: var(--a2); background: rgba(124,106,247,.12); }
+.oletter { width: 30px; height: 30px; min-width: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0; margin-top: 1px; }
+.otext { font-size: 14px; line-height: 1.55; padding-top: 3px; }
+.nav { display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; }
+.btn { padding: 13px 30px; border-radius: 100px; border: none; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all .2s; }
+.btn-sec { background: transparent; border: 1.5px solid rgba(255,255,255,.18); color: var(--muted); }
+.btn-sec:hover { border-color: rgba(255,255,255,.4); color: var(--text); }
+.btn-pri { background: linear-gradient(135deg, var(--a2), #9b8bff); color: #fff; box-shadow: 0 4px 20px rgba(124,106,247,.4); }
+.btn-pri:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(124,106,247,.5); }
+.btn-pri:disabled { opacity: .35; cursor: not-allowed; transform: none; box-shadow: none; }
+#result { display: none; }
+.res-top { text-align: center; margin-bottom: 28px; }
+.res-icon { font-size: 60px; display: block; margin-bottom: 12px; }
+.res-type { font-family: 'Playfair Display', serif; font-size: clamp(26px,5vw,40px); font-weight: 900; margin-bottom: 4px; }
+.rcard { background: var(--card); border: 1px solid rgba(255,255,255,.07); border-radius: var(--r); padding: 26px 28px; margin-bottom: 14px; }
+.rcard h3 { font-family: 'Playfair Display', serif; font-size: 16px; margin-bottom: 10px; color: var(--a1); }
+.rcard p { color: var(--muted); font-size: 14px; line-height: 1.7; }
+.traits { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
+.trait { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); border-radius: 10px; padding: 12px 14px; font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+.tdot { width: 8px; height: 8px; min-width: 8px; border-radius: 50%; }
+.srow { display: flex; align-items: center; gap: 14px; margin-top: 8px; }
+.slabel { font-size: 13px; color: var(--muted); min-width: 160px; }
+.sbg { flex: 1; height: 6px; background: rgba(255,255,255,.08); border-radius: 100px; overflow: hidden; }
+.sfill { height: 100%; border-radius: 100px; transition: width 1s ease .4s; }
+.spct { font-size: 12px; color: var(--muted); min-width: 32px; text-align: right; }
+
+/* Blanchard box */
+.blanchard-box { border-radius: var(--r); padding: 26px 28px; margin-bottom: 14px; border: 2px solid; }
+.blanchard-label { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; opacity: .7; }
+.blanchard-title { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 900; margin-bottom: 6px; }
+.blanchard-sub { font-size: 13px; font-weight: 600; margin-bottom: 12px; opacity: .8; }
+.blanchard-desc { font-size: 14px; line-height: 1.7; opacity: .85; }
+
+.btn-yel { background: linear-gradient(135deg, var(--a1), #f0a500); color: #0f0e17; font-weight: 700; flex: 1; }
+.btn-yel:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(232,197,71,.4); }
+.btn-out { background: transparent; border: 1.5px solid rgba(255,255,255,.2); color: var(--text); flex: 1; }
+.btn-out:hover { border-color: rgba(255,255,255,.45); }
+.toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(16px); background: var(--a1); color: #0f0e17; font-size: 13px; font-weight: 600; padding: 12px 24px; border-radius: 100px; opacity: 0; transition: all .3s; pointer-events: none; z-index: 999; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+@media(max-width:520px){ .traits{grid-template-columns:1fr;} .nav{flex-direction:column;} }
+</style>
+</head>
+<body>
+<div class="orbs"><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div></div>
+<div class="wrap">
+  <div id="quiz">
+    <div class="header">
+      <div class="badge">Test kompetencyjny</div>
+      <h1>Jaki typ<br><span>delegowania</span><br>reprezentujesz?</h1>
+      <p class="sub">20 pytań, które ujawnią Twój naturalny styl przekazywania zadań i odpowiedzialności w zespole.</p>
+    </div>
+    <div class="prog-wrap">
+      <div class="prog-meta"><span id="pcounter">Pytanie 1 z 20</span><span id="ppct">0%</span></div>
+      <div class="prog-bg"><div class="prog-fill" id="pfill" style="width:0%"></div></div>
+    </div>
+    <div class="qcard">
+      <div class="qnum" id="qnum">PYTANIE 01</div>
+      <div class="qtext" id="qtext"></div>
+    </div>
+    <div class="opts" id="opts"></div>
+    <div class="nav">
+      <button class="btn btn-sec" id="btnPrev" onclick="prev()" style="display:none">&#8592; Wstecz</button>
+      <button class="btn btn-pri" id="btnNext" onclick="next()" disabled>Dalej &#8594;</button>
+    </div>
+  </div>
+
+  <div id="result">
+    <div class="res-top">
+      <span class="res-icon" id="ricon"></span>
+      <div class="badge" id="rtag" style="margin-bottom:10px"></div>
+      <div class="res-type" id="rname"></div>
+    </div>
+    <div class="rcard"><h3>&#128203; Charakterystyka</h3><p id="rdesc"></p></div>
+    <div class="rcard"><h3>&#10024; Twoje mocne strony</h3><div class="traits" id="rtraits"></div></div>
+    <div class="rcard"><h3>&#9888; Na co warto zwrócić uwagę</h3><p id="rdev"></p></div>
+
+    <!-- Blanchard -->
+    <div class="blanchard-box" id="blanchard-box">
+      <div class="blanchard-label">Model Blancharda</div>
+      <div class="blanchard-title" id="blanchard-title"></div>
+      <div class="blanchard-sub" id="blanchard-sub"></div>
+      <div class="blanchard-desc" id="blanchard-desc"></div>
+    </div>
+
+    <div class="rcard"><h3>&#128202; Twój profil &ndash; wszystkie typy</h3><div id="rscores"></div></div>
+    <div class="nav" style="margin-top:28px">
+      <button class="btn btn-out" onclick="restart()">&#8617; Zacznij od nowa</button>
+      <button class="btn btn-yel" onclick="shareLink()">&#128279; Udostępnij test</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast">Link skopiowany! &#128203;</div>
+
+<script>
+var QQ = [
+  {t:"Przekazujesz pracownikowi nowe zadanie. Co robisz jako pierwsze?",o:[{t:"Szczegółowo tłumaczę krok po kroku, jak to zrobić",k:"A"},{t:"Wyjaśniam cel i daję swobodę w wyborze metody",k:"B"},{t:"Pytam, czy pracownik czuje się gotowy i czy potrzebuje wsparcia",k:"C"},{t:"Przydzielam zadanie i ufam, że pracownik sobie poradzi",k:"D"}]},
+  {t:"Twój pracownik popełnił błąd w realizacji delegowanego zadania. Jak reagujesz?",o:[{t:"Poprawiam błąd sam i od teraz sprawdzam każdy etap",k:"A"},{t:"Informuję o błędzie, przekazuję wytyczne i pozwalam poprawić",k:"B"},{t:"Omawiamy błąd razem – szukam przyczyn i wyciągamy wnioski",k:"C"},{t:"Pytam, czego pracownik nauczył się z tej sytuacji",k:"D"}]},
+  {t:"Jak często sprawdzasz postępy w zadaniach, które delegowałeś/aś?",o:[{t:"Bardzo często – wolę wiedzieć o każdym kroku",k:"A"},{t:"W ustalonych z góry punktach kontrolnych",k:"B"},{t:"Regularnie, ale skupiam się na rozmowie, nie raportach",k:"C"},{t:"Kiedy pracownik sam zgłasza potrzebę pomocy",k:"D"}]},
+  {t:"Pracownik proponuje inne podejście do zadania niż to, które miałeś/aś w głowie. Co robisz?",o:[{t:"Grzecznie, ale stanowczo tłumaczę, dlaczego moja metoda jest lepsza",k:"A"},{t:"Rozważam propozycję i daję zielone światło, jeśli cel pozostaje ten sam",k:"B"},{t:"Zadaję pytania, żeby pracownik sam ocenił, czy jego pomysł ma sens",k:"C"},{t:"Mówię: spróbuj – to jego zadanie i jego decyzja",k:"D"}]},
+  {t:"Jakie zadania najchętniej delegujesz?",o:[{t:"Tylko te proste i rutynowe – ważne sprawy zostawiam sobie",k:"A"},{t:"Zadania dobrze opisane, z jasnymi oczekiwaniami i mierzalnym wynikiem",k:"B"},{t:"Zadania rozwojowe, które wymagają od pracownika myślenia",k:"C"},{t:"Praktycznie wszystko – wierzę w potencjał ludzi",k:"D"}]},
+  {t:"Pracownik przychodzi do Ciebie z problemem. Jak najczęściej reagujesz?",o:[{t:"Od razu podaję rozwiązanie – po co tracić czas?",k:"A"},{t:"Wskazuję możliwe kroki i proszę o wybór",k:"B"},{t:"Pytam: co już próbowałeś/aś? Jak to możesz rozwiązać?",k:"C"},{t:"Wyrażam zaufanie i daję mu przestrzeń do samodzielnego rozwiązania",k:"D"}]},
+  {t:"Co myślisz, kiedy delegujesz zadanie i pracownik robi to inaczej, ale osiąga dobry wynik?",o:[{t:"Trochę mnie to irytuje – chciałem/am, żeby zrobił to po mojemu",k:"A"},{t:"Doceniam wynik, ale przy okazji omawiam metodę na przyszłość",k:"B"},{t:"Cieszę się i pytam, co mu pozwoliło osiągnąć ten wynik",k:"C"},{t:"Świetnie! To dowód, że warto dawać swobodę",k:"D"}]},
+  {t:"Jak opisałbyś/abyś swoją rolę w procesie delegowania?",o:[{t:"Jestem odpowiedzialny/a za to, jak zadanie zostanie wykonane",k:"A"},{t:"Wyznaczam ramy, a pracownik działa w ich obrębie",k:"B"},{t:"Jestem towarzyszem w rozwoju pracownika",k:"C"},{t:"Usuwam przeszkody, żeby pracownik mógł działać autonomicznie",k:"D"}]},
+  {t:"Jak reagujesz, gdy pracownik prosi Cię o bardzo szczegółowe instrukcje?",o:[{t:"Z przyjemnością tłumaczę wszystko dokładnie",k:"A"},{t:"Daję instrukcje, ale wyjaśniam też dlaczego, żeby rozumiał kontekst",k:"B"},{t:"Zamiast instrukcji zadaję pytania, które pomagają samodzielnie dojść do rozwiązania",k:"C"},{t:"Zachęcam do spróbowania i uczenia się przez działanie",k:"D"}]},
+  {t:"Co jest dla Ciebie największą wartością w delegowaniu zadań?",o:[{t:"Pewność, że wszystko zostanie zrobione dobrze",k:"A"},{t:"Efektywność i realizacja celów w terminie",k:"B"},{t:"Rozwój kompetencji i motywacji pracownika",k:"C"},{t:"Budowanie odpowiedzialności i autonomii w zespole",k:"D"}]},
+  {t:"Masz bardzo pilne zadanie do delegowania. Jak postępujesz?",o:[{t:"Sam/a wykonuję zadanie – nie ma czasu na tłumaczenie innym",k:"A"},{t:"Szybko wyznaczam osobę, precyzuję oczekiwania i ustalamy deadline",k:"B"},{t:"Krótko omawiam z pracownikiem i pytam, jak chce do tego podejść",k:"C"},{t:"Przekazuję zadanie z pełnym zaufaniem – pracownik wie, co robić",k:"D"}]},
+  {t:"Jak reagujesz, gdy pracownik wykonuje zadanie wolniej niż oczekiwałeś/aś?",o:[{t:"Przejmuję część zadań lub wkraczam, żeby przyspieszyć",k:"A"},{t:"Przypominam o terminie i pytam o aktualny status",k:"B"},{t:"Rozmawiam, czy są jakieś przeszkody i jak mogę pomóc",k:"C"},{t:"Ufam procesowi – jeśli nie prosi o pomoc, radzi sobie",k:"D"}]},
+  {t:"Nowy pracownik dołącza do zespołu. Jak go wdrażasz w delegowane zadania?",o:[{t:"Pokazuję dokładnie każdy krok i przez długi czas pracujemy razem",k:"A"},{t:"Tłumaczę cele, zakres i kryteria sukcesu, potem sprawdzam postępy",k:"B"},{t:"Pytam, co już umie, i razem ustalamy plan wdrożenia",k:"C"},{t:"Daję mu pierwsze zadanie i obserwuję, jak radzi sobie samodzielnie",k:"D"}]},
+  {t:"Pracownik przyszedł do Ciebie dwa razy z tym samym pytaniem dotyczącym zadania. Co robisz?",o:[{t:"Odpowiadam szczegółowo – wolę mieć pewność, że rozumie",k:"A"},{t:"Odpowiadam i sugeruję stworzenie checklisty na przyszłość",k:"B"},{t:"Pytam, co już próbował i jak sam/a rozumie ten problem",k:"C"},{t:"Zachęcam do podjęcia samodzielnej decyzji – wierzę w jego osąd",k:"D"}]},
+  {t:"Jak dzielisz się informacjami z pracownikami przy delegowaniu?",o:[{t:"Daję tylko tyle informacji, ile niezbędne do wykonania bieżącego kroku",k:"A"},{t:"Przekazuję pełny kontekst zadania i cel biznesowy",k:"B"},{t:"Dzielę się informacjami i pytam, jakich jeszcze potrzebują",k:"C"},{t:"Daję dostęp do wszystkich informacji – niech sami oceniają, co jest ważne",k:"D"}]},
+  {t:"Jak postępujesz, gdy delegowane zadanie jest strategicznie ważne dla firmy?",o:[{t:"Zostawiam je sobie – zbyt ważne, żeby ryzykować",k:"A"},{t:"Deleguję, ale ustawiam wiele punktów kontrolnych i wymogów raportowania",k:"B"},{t:"Deleguję i regularnie spotykamy się, żeby omawiać postępy i wyzwania",k:"C"},{t:"Deleguję z pełną odpowiedzialnością – ufam, że pracownik podoła",k:"D"}]},
+  {t:"Pracownik osiągnął świetny wynik w delegowanym zadaniu. Co robisz?",o:[{t:"Chwalę wynik, ale zwracam uwagę na drobne rzeczy do poprawy",k:"A"},{t:"Doceniam wynik i omawiam, co zadziałało dobrze",k:"B"},{t:"Pytam, jak się czuje z tym sukcesem i co chce robić dalej",k:"C"},{t:"Przekazuję mu większe i trudniejsze zadanie – zasłużył na więcej",k:"D"}]},
+  {t:"Jak reagujesz, gdy pracownik sam przychodzi z nowym pomysłem na usprawnienie procesu?",o:[{t:"Słucham, ale zazwyczaj wolę sprawdzone metody",k:"A"},{t:"Analizuję pomysł pod kątem celów i efektywności, potem decyduję",k:"B"},{t:"Pytam o więcej szczegółów i zachęcam do opracowania planu wdrożenia",k:"C"},{t:"Od razu daję zielone światło – inicjatywa to coś, co cenię najbardziej",k:"D"}]},
+  {t:"Jak reagujesz, gdy kilka osób w zespole potrzebuje pomocy w tym samym czasie?",o:[{t:"Staram się pomóc każdemu osobiście – tylko wtedy mam pewność wyniku",k:"A"},{t:"Ustalam priorytety i kolejno rozwiązuję każdy problem",k:"B"},{t:"Organizuję krótkie spotkanie i razem szukamy rozwiązań",k:"C"},{t:"Zachęcam, żeby najpierw spróbowali pomóc sobie nawzajem w zespole",k:"D"}]},
+  {t:"Koniec kwartału – co jest dla Ciebie miernikiem sukcesu delegowania?",o:[{t:"To, czy wszystkie zadania zostały wykonane zgodnie z moimi standardami",k:"A"},{t:"To, czy cele zostały zrealizowane w terminie i budżecie",k:"B"},{t:"To, czy pracownicy nauczyli się czegoś nowego i są bardziej samodzielni",k:"C"},{t:"To, czy zespół działał autonomicznie i potrzebował minimalnego wsparcia z mojej strony",k:"D"}]}
+];
+
+var TYPES = {
+  A: {
+    name: "Mikromenedżer",
+    tag: "Typ kontrolujący",
+    icon: "&#128269;",
+    color: "#f76c6c",
+    desc: "Masz silną potrzebę kontroli i chcesz być pewny/a, że wszystko pójdzie zgodnie z planem. Delegujesz zadania, ale trudno Ci odpuścić nadzór nad każdym krokiem. Często sam/a poprawiasz lub wkraczasz tam, gdzie nie trzeba – bo zależy Ci na jakości i standardzie.",
+    traits: ["Dbałość o szczegóły","Wysoka jakość wykonania","Znajomość procesów","Konsekwencja i przewidywalność"],
+    dev: "Warto pracować nad zaufaniem do kompetencji zespołu. Nadmierna kontrola może demotywować pracowników i ograniczać ich rozwój. Spróbuj świadomie wyznaczać punkty kontrolne zamiast śledzić każdy krok.",
+    blanchard: {
+      title: "S1 – Instruowanie (Telling)",
+      sub: "Wysoka dyrektywa, niskie wsparcie relacyjne",
+      desc: "Naturalnie wchodzisz w rolę S1 z modelu Blancharda. Czujesz się pewnie, gdy możesz dokładnie powiedzieć pracownikowi co, jak i kiedy ma zrobić. Ten styl świetnie sprawdza się przy nowych, niedoświadczonych pracownikach – ale stosowany zbyt długo może blokować ich samodzielność i motywację.",
+      color: "#7c6af7",
+      border: "#7c6af7"
+    }
+  },
+  B: {
+    name: "Delegujący Strukturalnie",
+    tag: "Typ zadaniowy",
+    icon: "&#128208;",
+    color: "#e8c547",
+    desc: "Delegujesz sprawnie i efektywnie – wyznaczasz jasne oczekiwania, definiujesz ramy i sprawdzasz wyniki w kluczowych momentach. Jesteś zorientowany/a na cele i potrafisz przekazywać odpowiedzialność w zorganizowany sposób.",
+    traits: ["Klarowna komunikacja","Skuteczność operacyjna","Zarządzanie przez cele","Systematyczność i porządek"],
+    dev: "Rozważ większe angażowanie pracowników w ustalanie celów i metod działania. Zbyt mocne skupienie na strukturze może ograniczać kreatywność zespołu i ich poczucie współwłasności zadań.",
+    blanchard: {
+      title: "S2 – Trenowanie (Coaching)",
+      sub: "Wysoka dyrektywa, wysokie wsparcie relacyjne",
+      desc: "Naturalnie wchodzisz w rolę S2 z modelu Blancharda. Potrafisz łączyć konkretne wytyczne z zaangażowaniem pracownika – tłumaczysz dlaczego, nie tylko co. Ten styl jest idealny dla pracowników, którzy rozwijają kompetencje, ale potrzebują jeszcze struktury i kierunku.",
+      color: "#e8c547",
+      border: "#e8c547"
+    }
+  },
+  C: {
+    name: "Delegujący Coachingowo",
+    tag: "Typ rozwojowy",
+    icon: "&#127807;",
+    color: "#4ecdc4",
+    desc: "Traktujesz delegowanie jako narzędzie rozwoju. Zależy Ci nie tylko na wyniku, ale na tym, żeby pracownik uczył się i rósł w trakcie realizacji zadania. Zadajesz pytania zamiast dawać gotowe odpowiedzi i wierzysz w potencjał ludzi.",
+    traits: ["Myślenie coachingowe","Cierpliwość i empatia","Orientacja na rozwój","Aktywne słuchanie"],
+    dev: "Pamiętaj, że nie każda sytuacja wymaga podejścia coachingowego. Kiedy liczy się czas lub wynik, pracownik może potrzebować jasnych instrukcji, a nie serii pytań. Dostosowuj styl do osoby i sytuacji.",
+    blanchard: {
+      title: "S3 – Wspieranie (Supporting)",
+      sub: "Niska dyrektywa, wysokie wsparcie relacyjne",
+      desc: "Naturalnie wchodzisz w rolę S3 z modelu Blancharda. Doskonale słuchasz, angażujesz i wspierasz pracownika w samodzielnym myśleniu. Ten styl świetnie sprawdza się u kompetentnych pracowników, którzy potrzebują motywacji i potwierdzenia swojego kierunku – a nie kolejnych instrukcji.",
+      color: "#4ecdc4",
+      border: "#4ecdc4"
+    }
+  },
+  D: {
+    name: "Empowerment Leader",
+    tag: "Typ upełnomocniający",
+    icon: "&#128640;",
+    color: "#7c6af7",
+    desc: "Wierzysz głęboko w autonomię i odpowiedzialność pracowników. Delegujesz odważnie, dajesz szeroki zakres swobody i stawiasz na budowanie kultury zaufania. Twoim zadaniem jest usuwanie przeszkód, a nie wytyczanie ścieżek.",
+    traits: ["Głęboki szacunek i zaufanie","Kultura odpowiedzialności","Odwaga decyzyjna","Budowanie samodzielności"],
+    dev: "Upewnij się, że pracownicy mają faktyczne kompetencje i zasoby do działania autonomicznego. Zbyt szybkie przekazanie pełnej swobody bez odpowiedniego wsparcia może prowadzić do frustracji lub błędów.",
+    blanchard: {
+      title: "S4 – Delegowanie (Delegating)",
+      sub: "Niska dyrektywa, niskie wsparcie bezpośrednie",
+      desc: "Naturalnie wchodzisz w rolę S4 z modelu Blancharda. Ufasz ludziom i dajesz im pełną odpowiedzialność za zadania. Ten styl jest najskuteczniejszy z doświadczonymi, zaangażowanymi pracownikami – i właśnie do tego poziomu dojrzałości warto świadomie prowadzić swój zespół.",
+      color: "#7c6af7",
+      border: "#7c6af7"
+    }
+  }
+};
+
+var COLORS = {A:"#f76c6c", B:"#e8c547", C:"#4ecdc4", D:"#7c6af7"};
+var TOTAL = QQ.length, cur = 0, ans = [];
+
+function render() {
+  var q = QQ[cur];
+  document.getElementById("qnum").textContent = "PYTANIE " + String(cur+1).padStart(2,"0");
+  document.getElementById("qtext").textContent = q.t;
+  document.getElementById("pcounter").textContent = "Pytanie " + (cur+1) + " z " + TOTAL;
+  var pct = Math.round(cur / TOTAL * 100);
+  document.getElementById("ppct").textContent = pct + "%";
+  document.getElementById("pfill").style.width = pct + "%";
+  var html = "", letters = ["A","B","C","D"];
+  for (var i = 0; i < q.o.length; i++) {
+    var sel = (ans[cur] === i) ? " sel" : "";
+    html += '<div class="opt' + sel + '" onclick="pick(' + i + ')">';
+    html += '<div class="oletter" style="background:' + COLORS[letters[i]] + '">' + letters[i] + '</div>';
+    html += '<div class="otext">' + q.o[i].t + '</div></div>';
+  }
+  document.getElementById("opts").innerHTML = html;
+  document.getElementById("btnNext").disabled = (ans[cur] === undefined);
+  document.getElementById("btnPrev").style.display = cur > 0 ? "inline-flex" : "none";
+  document.getElementById("btnNext").textContent = cur === TOTAL - 1 ? "Zobacz wynik!" : "Dalej \u2192";
+}
+
+function pick(i) {
+  ans[cur] = i;
+  var opts = document.getElementById("opts").children;
+  for (var j = 0; j < opts.length; j++) opts[j].className = "opt" + (j === i ? " sel" : "");
+  document.getElementById("btnNext").disabled = false;
+}
+
+function next() {
+  if (ans[cur] === undefined) return;
+  if (cur < TOTAL - 1) { cur++; render(); window.scrollTo({top:0, behavior:"smooth"}); }
+  else showResult();
+}
+
+function prev() { if (cur > 0) { cur--; render(); } }
+
+function showResult() {
+  var scores = {A:0, B:0, C:0, D:0};
+  for (var i = 0; i < ans.length; i++) scores[QQ[i].o[ans[i]].k]++;
+  var winner = "A", best = 0, keys = ["A","B","C","D"];
+  for (var ki = 0; ki < keys.length; ki++) if (scores[keys[ki]] > best) { best = scores[keys[ki]]; winner = keys[ki]; }
+  var t = TYPES[winner];
+
+  document.getElementById("quiz").style.display = "none";
+  document.getElementById("result").style.display = "block";
+  document.getElementById("ricon").innerHTML = t.icon;
+  document.getElementById("rtag").textContent = t.tag;
+  document.getElementById("rtag").style.color = t.color;
+  document.getElementById("rname").textContent = t.name;
+  document.getElementById("rname").style.color = t.color;
+  document.getElementById("rdesc").textContent = t.desc;
+  document.getElementById("rdev").textContent = t.dev;
+
+  var th = "";
+  for (var ti = 0; ti < t.traits.length; ti++)
+    th += '<div class="trait"><div class="tdot" style="background:' + t.color + '"></div>' + t.traits[ti] + '</div>';
+  document.getElementById("rtraits").innerHTML = th;
+
+  // Blanchard
+  var b = t.blanchard;
+  var box = document.getElementById("blanchard-box");
+  box.style.borderColor = b.border;
+  box.style.background = "rgba(255,255,255,0.03)";
+  document.getElementById("blanchard-title").textContent = b.title;
+  document.getElementById("blanchard-title").style.color = b.color;
+  document.getElementById("blanchard-sub").textContent = b.sub;
+  document.getElementById("blanchard-sub").style.color = b.color;
+  document.getElementById("blanchard-desc").textContent = b.desc;
+  document.getElementById("blanchard-desc").style.color = "var(--muted)";
+
+  var sorted = keys.slice().sort(function(a,b){ return scores[b]-scores[a]; });
+  var sh = "";
+  for (var si = 0; si < sorted.length; si++) {
+    var sk = sorted[si], sp = Math.round(scores[sk] / TOTAL * 100);
+    sh += '<div class="srow"><div class="slabel">' + TYPES[sk].name + '</div>';
+    sh += '<div class="sbg"><div class="sfill" style="width:' + sp + '%;background:' + COLORS[sk] + '"></div></div>';
+    sh += '<div class="spct">' + scores[sk] + '/' + TOTAL + '</div></div>';
+  }
+  document.getElementById("rscores").innerHTML = sh;
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+function restart() {
+  cur = 0; ans = [];
+  document.getElementById("result").style.display = "none";
+  document.getElementById("quiz").style.display = "block";
+  render(); window.scrollTo({top:0, behavior:"smooth"});
+}
+
+function shareLink() {
+  var url = window.location.href;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(function(){ showToast(); });
+  } else {
+    var el = document.createElement("textarea");
+    el.value = url; document.body.appendChild(el); el.select();
+    document.execCommand("copy"); document.body.removeChild(el); showToast();
+  }
+}
+
+function showToast() {
+  var t = document.getElementById("toast");
+  t.classList.add("show");
+  setTimeout(function(){ t.classList.remove("show"); }, 3000);
+}
+
+render();
+</script>
+</body>
+</html>
